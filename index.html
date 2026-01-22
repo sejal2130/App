@@ -1,18 +1,112 @@
+from flask import Flask, request, render_template_string
+import sqlite3
+
+app = Flask(__name__)
+
+# ---------------- DATABASE ----------------
+def get_db():
+    conn = sqlite3.connect("feedback.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+conn = get_db()
+conn.execute("""
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    message TEXT
+)
+""")
+conn.commit()
+conn.close()
+
+# ---------------- HTML + CSS ----------------
+HTML = """
 <!DOCTYPE html>
 <html>
 <head>
     <title>Student Feedback</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            text-align: center;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            width: 300px;
+            margin: auto;
+            border-radius: 8px;
+        }
+        input, textarea {
+            width: 90%;
+            margin: 10px;
+            padding: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        .card {
+            background: white;
+            padding: 10px;
+            margin: 10px auto;
+            width: 300px;
+            border-radius: 6px;
+        }
+        a {
+            display: block;
+            margin-top: 15px;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
+
     <h2>Student Feedback Form</h2>
 
-    <form action="/submit" method="post">
+    <form method="post">
         <input type="text" name="name" placeholder="Your Name" required>
         <textarea name="message" placeholder="Your Feedback" required></textarea>
         <button type="submit">Submit</button>
     </form>
 
-    <a href="/view">View Feedback</a>
+    <h3>All Feedback</h3>
+
+    {% for fb in feedbacks %}
+        <div class="card">
+            <h4>{{ fb.name }}</h4>
+            <p>{{ fb.message }}</p>
+        </div>
+    {% endfor %}
+
 </body>
 </html>
+"""
+
+# ---------------- ROUTES ----------------
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        name = request.form["name"]
+        message = request.form["message"]
+
+        conn = get_db()
+        conn.execute("INSERT INTO feedback (name, message) VALUES (?, ?)",
+                     (name, message))
+        conn.commit()
+        conn.close()
+
+    conn = get_db()
+    feedbacks = conn.execute("SELECT * FROM feedback").fetchall()
+    conn.close()
+
+    return render_template_string(HTML, feedbacks=feedbacks)
+
+# ---------------- RUN ----------------
+if __name__ == "__main__":
+    app.run(debug=True)
