@@ -1,112 +1,84 @@
-from flask import Flask, request, render_template_string
-import sqlite3
-
-app = Flask(__name__)
-
-# ---------------- DATABASE ----------------
-def get_db():
-    conn = sqlite3.connect("feedback.db")
-    conn.row_factory = sqlite3.Row
-    return conn
-
-conn = get_db()
-conn.execute("""
-CREATE TABLE IF NOT EXISTS feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    message TEXT
-)
-""")
-conn.commit()
-conn.close()
-
-# ---------------- HTML + CSS ----------------
-HTML = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Student Feedback</title>
+
     <style>
         body {
-            font-family: Arial;
-            background: #f4f6f8;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
             text-align: center;
+            padding: 40px;
         }
-        form {
+
+        .container {
             background: white;
-            padding: 20px;
-            width: 300px;
+            width: 400px;
             margin: auto;
-            border-radius: 8px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
         input, textarea {
             width: 90%;
-            margin: 10px;
-            padding: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
+
         button {
             background: #007bff;
             color: white;
-            padding: 8px 15px;
             border: none;
+            padding: 10px 25px;
             cursor: pointer;
+            border-radius: 5px;
         }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+        }
+
+        .title {
+            margin-top: 40px;
+        }
+
         .card {
             background: white;
-            padding: 10px;
-            margin: 10px auto;
-            width: 300px;
-            border-radius: 6px;
-        }
-        a {
-            display: block;
-            margin-top: 15px;
-            text-decoration: none;
+            width: 400px;
+            margin: 15px auto;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
     </style>
 </head>
+
 <body>
 
-    <h2>Student Feedback Form</h2>
+    <div class="container">
+        <h2>Student Feedback Form</h2>
 
-    <form method="post">
-        <input type="text" name="name" placeholder="Your Name" required>
-        <textarea name="message" placeholder="Your Feedback" required></textarea>
-        <button type="submit">Submit</button>
-    </form>
+        <form>
+            <input type="text" placeholder="Your Name" required>
+            <textarea placeholder="Your Feedback" required></textarea>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 
-    <h3>All Feedback</h3>
+    <h2 class="title">All Feedback</h2>
 
-    {% for fb in feedbacks %}
-        <div class="card">
-            <h4>{{ fb.name }}</h4>
-            <p>{{ fb.message }}</p>
-        </div>
-    {% endfor %}
+    <div class="card">
+        <h4>Student Name</h4>
+        <p>This is sample feedback text.</p>
+    </div>
 
 </body>
 </html>
-"""
-
-# ---------------- ROUTES ----------------
-@app.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "POST":
-        name = request.form["name"]
-        message = request.form["message"]
-
-        conn = get_db()
-        conn.execute("INSERT INTO feedback (name, message) VALUES (?, ?)",
-                     (name, message))
-        conn.commit()
-        conn.close()
-
-    conn = get_db()
-    feedbacks = conn.execute("SELECT * FROM feedback").fetchall()
-    conn.close()
-
-    return render_template_string(HTML, feedbacks=feedbacks)
-
-# ---------------- RUN ----------------
-if __name__ == "__main__":
-    app.run(debug=True)
