@@ -1,30 +1,34 @@
 pipeline {
     agent any
 
+    environment {
+        PYTHON = "C:\\Python311\\python.exe"
+    }
+
     stages {
 
-        stage('Stage One - Clone Repo') {
+        stage('Clone Repo') {
             steps {
                 git branch: 'master',
                     url: 'https://github.com/sejal2130/App.git'
             }
         }
 
-        stage('Stage Two - Check Python Version') {
+        stage('Check Python Version') {
             steps {
-                bat 'python --version'
+                bat '"%PYTHON%" --version'
             }
         }
 
-        stage('Stage Three - Install Dependencies') {
+        stage('Install Dependencies') {
             steps {
-                bat 'pip install -r requirements.txt'
+                bat '"%PYTHON%" -m pip install -r requirements.txt'
             }
         }
 
-        stage('Stage Four - Run Application') {
+        stage('Run Application') {
             steps {
-                bat 'python app.py'
+                bat '"%PYTHON%" app.py'
             }
         }
     }
