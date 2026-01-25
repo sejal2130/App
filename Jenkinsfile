@@ -2,30 +2,29 @@ pipeline {
     agent any
 
     stages {
-        stage ('stage one') {
+
+        stage('Stage One - Clone Repo') {
             steps {
                 git branch: 'master',
-                  url: 'https://github.com/sejal2130/App.git'
+                    url: 'https://github.com/sejal2130/App.git'
             }
         }
-        stage ('stage Two') {
-            steps {
-                sh """ python --version """
-            }
-        }
-        stage('stage Three') {
-            steps {
-                bat """
-                    pip install -r requirements.txt
-                    """
 
+        stage('Stage Two - Check Python Version') {
+            steps {
+                bat 'python --version'
             }
         }
-        stage('stage Four') {
+
+        stage('Stage Three - Install Dependencies') {
             steps {
-                baat """
-                 python app.py 
-                """
+                bat 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Stage Four - Run Application') {
+            steps {
+                bat 'python app.py'
             }
         }
     }
