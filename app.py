@@ -1,49 +1,31 @@
-from flask import Flask, render_template, request, redirect
-import sqlite3
+from flask import Flask, render_template, request
+import pandas as pd
+import os
 
 app = Flask(__name__)
 
-# Database connection
-def get_db_connection():
-    conn = sqlite3.connect("feedback.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+UPLOAD_FOLDER = "data"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Create table
-conn = get_db_connection()
-conn.execute("""
-CREATE TABLE IF NOT EXISTS feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    message TEXT
-)
-""")
-conn.commit()
-conn.close()
-
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    rows = None
 
-@app.route("/submit", methods=["POST"])
-def submit():
-    name = request.form["name"]
-    message = request.form["message"]
+    if request.method == "POST":
+        file = request.files["file"]
+        if file:
+            path = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(path)
 
-    conn = get_db_connection()
-    conn.execute("INSERT INTO feedback (name, message) VALUES (?, ?)",
-                 (name, message))
-    conn.commit()
-    conn.close()
+            # ===== PIPELINE =====
+            df = pd.read_csv(path)        # Extract
+            df = df.dropna()              # Transform
+            output_path = "data/clean.csv"
+            df.to_csv(output_path, index=False)  # Load
 
-    return redirect("/")
+            rows = len(df)
 
-@app.route("/view")
-def view():
-    conn = get_db_connection()
-    feedbacks = conn.execute("SELECT * FROM feedback").fetchall()
-    conn.close()
-    return render_template("view.html", feedbacks=feedbacks)
+    return render_template("index.html", rows=rows)
 
 if __name__ == "__main__":
     app.run(debug=True)

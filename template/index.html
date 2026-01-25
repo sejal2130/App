@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Python ETL Pipeline</h1>
+
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" required>
+    <button type="submit">Run Pipeline</button>
+</form>
+
+{% if rows %}
+    <p>Pipeline executed successfully ✅</p>
+    <p>Total clean rows: <b>{{ rows }}</b></p>
+{% endif %}
+{% endblock %}
