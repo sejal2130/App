@@ -8,7 +8,7 @@ pipeline {
                   url: 'https://github.com/sejal2130/App.git'
             }
         }
-        stage ('stage Two check python') {
+        stage ('stage Two') {
             steps {
                 sh """ python --version """
             }
